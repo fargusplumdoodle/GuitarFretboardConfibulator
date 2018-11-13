@@ -1,0 +1,24 @@
+{
+  "scales" : [
+    {
+      "id": 0,
+      "name": "Major",
+      "soff": [0, 2, 2, 1, 2, 2, 1]
+    },
+    {
+      "id": 1,
+      "name": "Minor",
+      "soff": [0, 2, 1, 2, 2, 1, 2]
+    },
+    {
+      "id": 2,
+      "name": "Major Pentatonic",
+      "soff": [0, 2, 2, 3, 2, 3]
+    },
+    {
+      "id": 3,
+      "name": "Minor Pentatonic",
+      "soff": [0, 3, 2, 2, 3, 2]
+    }
+  ]
+}
