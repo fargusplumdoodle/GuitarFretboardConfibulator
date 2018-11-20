@@ -1,164 +1,116 @@
 import React, { Component } from 'react';
-import GenerateScale from './GenerateScale';
+
+function DisplayNote(input, nmn) {
+        const numbers = {
+            0: "A",
+            1: "A#",
+            2: "B",
+            3: "C",
+            4: "C#",
+            5: "D",
+            6: "D#",
+            7: "E",
+            8: "F",
+            9: "F#",
+            10: "G",
+            11: "G#"
+
+        };
+        //verifying input
+        if (input < 0  || input > 11){
+            return "error: invalid input, note must be between 0 and 11"
+        }
+        // will return the note based on users preference, SNM or NMN
+        if (Number.isInteger(parseInt(input)) && nmn){
+            // the input is a number and the user wants a number
+            return input;
+
+        } else if (Number.isInteger(parseInt(input)) && !nmn){
+            // the input is a number but the user wants a letter
+            return numbers[input];
+        }
+    }
+
+const GenerateScale = (props) => {
+        let scale = '';
+
+        for (let i = 0; i < props.soff.length; i++){
+            let x = 0;
+            for (let y = 0; y < i + 1; y++){
+                x += props.soff[y];
+            }
+           let note = (+props.base + x) % 12;
+            scale += DisplayNote(note, props.nmn) + ' ';
+        }
+	
+	return( scale.toString() );
+};
 
 class InputForm extends Component {
 
-    constructor(props) {
-        super(props);
-        this.handleSubmit = this.handleSubmit.bind(this);
-        this.handleRootChoice = this.handleRootChoice.bind(this);
-        this.handleChangeNMN = this.handleChangeNMN.bind(this);
-        this.handleScaleChoice = this.handleScaleChoice.bind(this);
-        this.state = {
-            root: "0",
-            selectedScale: "",
-            useNMN: false,
-            numbers: {
-                0: "A",
-                1: "A#",
-                2: "B",
-                3: "C",
-                4: "C#",
-                5: "D",
-                6: "D#",
-                7: "E",
-                8: "F",
-                9: "F#",
-                10: "G",
-                11: "G#"
+	constructor(props){
+		super(props);
+		this.handleRootChange = this.handleRootChange.bind(this);
+		this.state = {
+			root: 0,
+			scale: 'minor pentatonic',
+			soff: [0, 3, 2, 2, 3, 2],
+			nmn: false
+		}
+	}
 
-            },
-            scales: [],
-            renderScale: false,
-            soff: undefined
+	handleRootChange(event){
+		event.preventDefault();
+		this.setState({
+			root: event.target.value
+		});
+	}
 
-        }
-    }
-
-    handleSubmit(event) {
+    handleNMNChange(event){
         event.preventDefault();
-        console.log('Settings:\nRootnote:' + this.state.root);
-        console.log('Scale: ' + this.state.selectedScale);
         this.setState({
-            renderScale: true
-
-        })
-    }
-
-    handleRootChoice(event) {
-        this.setState({
-           root: event.target.value
+            nmn: event.target.value
         });
     }
 
-    handleScaleChoice (event){
 
-        let soff = undefined
-        for (let i = 0; i < this.state.scales.length; i++){
-            if (this.state.scales[i].name == event.target.value){
-                soff = this.state.scales[i].soff;
-            }
-        }
+	render(){
+		return (
+		<div>
+		<form onSubmit={this.handleRootChange}>
+			<label>
+				<input type='range'
+					name='rootnoteinput'
+					min='0' max='11'
+					onChange={this.handleRootChange}
+					value={this.state.root}
+					/>
+			&nbsp;Root note: {this.state.root}
+			</label>
+			<br/>
+			<label>
+				<input type='checkbox'
+					name='nmncheckbox'
+					value={this.state.nmn}
+					onChange={this.handleNMNChange}/>
+			&nbsp;NMN
+			</label>
+			<br/>
+		</form>
+		<GenerateScale nmn={this.state.nmn} base={ this.state.root} soff={this.state.soff}/>
+		</div>
+		);
 
-        this.setState({
-            selectedScale: event.target.value,
-            soff: soff
+	}
 
-        })
-        console.log('soff:' + this.state.soff)
-    }
-
-    handleChangeNMN(event){
-        this.setState({
-           useNMN: event.target.value
-        });
-        console.log('target:' + event.target.value);
-    }
-
-    displayNote(input){
-        // will return the note based on users preference, SNM or NMN
-        if (Number.isInteger(parseInt(input)) && this.state.useNMN){
-            // the input is a number and the user wants a number
-            //verifying input
-            if (input < 0  || input > 11){
-                return "error: invalid input, note must be between 0 and 11"
-            }
-            return input;
-
-        } else if (Number.isInteger(parseInt(input)) && !this.state.useNMN){
-            // the input is a number but the user wants a letter
-            if (input < 0  || input > 11){
-                return "error: invalid input, note must be between 0 and 11"
-            }
-            // the input is a number and the user wants a number
-            return this.state.numbers[input];
-        }
-    }
-
-    handleHTTPErrors(response) {
-        if (!response.ok) throw Error(response.status + ': ' + response.statusText);
-        return response;
-    }
-
-    componentDidMount() {
-        fetch('http://localhost:3004/scales')
-            .then(response=> this.handleHTTPErrors(response))
-            .then(response=> response.json())
-            .then(result=> {
-                this.setState({
-                    scales: result
-                });
-            })
-            .catch(error=> {
-                console.log('Fetch API Error: ' + error);
-            });
-    }
-
-    render () {
-        if ( ! this.state.renderScale) {
-            return (
-                <form onSubmit={this.handleSubmit}>
-                    <label>
-                        <input type="checkbox" value={this.state.useNMN}
-                               onChange={this.handleChangeNMN}/>
-                        &nbsp;Use NMN
-                    </label>
-                    <br/>
-                    <label>
-                        <input type="range" name="RootNoteInput" min="0" max="11" value={this.state.root}
-                               onChange={this.handleRootChoice}/>
-                        &nbsp;Root Note: {this.displayNote(this.state.root)}
-                    </label>
-                    <br/>
-                    <label>
-                        <div class="dropdown">
-                            <button class="dropbtn">Scale: {this.state.selectedScale}</button>
-                            <div class="dropdown-content">
-                                {this.state.scales.map(scale =>
-                                    <label key={scale.id}>
-                                        <input key={scale.id} type='radio'  name='scale' value={scale.name}
-                                               onChange={this.handleScaleChoice}/>
-                                        &nbsp;&nbsp;{scale.name}
-                                    </label>
-                                )}
-                            </div>
-                        </div>
-                        <br/>
-                        <br/>
-                    </label>
-                    <input type="submit" value="submit"/>
-                </form>
-            );
-        } else {
-
-            return (
-                <GenerateScale root={this.state.root}
-                               scale={this.state.selectedScale}
-                               nmn={this.state.useNMN}
-                               soff={this.state.soff}/>
-            );
-        }
-    }
 }
 
 export default InputForm;
+
+
+
+
+
+
+
+
