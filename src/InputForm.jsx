@@ -50,10 +50,13 @@ class InputForm extends Component {
 
 	constructor(props){
 		super(props);
+		this.handleNMNChange = this.handleNMNChange.bind(this);
+		this.handleScaleChoice = this.handleScaleChoice.bind(this);
 		this.handleRootChange = this.handleRootChange.bind(this);
 		this.state = {
 			root: 0,
-			scale: 'minor pentatonic',
+			scale: 'Minor Pentatonic',
+			scales: [],
 			soff: [0, 3, 2, 2, 3, 2],
 			nmn: false
 		}
@@ -68,34 +71,88 @@ class InputForm extends Component {
 
     handleNMNChange(event){
         event.preventDefault();
+	console.log('Event: ' + event.target.value);
         this.setState({
             nmn: event.target.value
         });
     }
 
+    handleScaleChoice (event){
+
+        let soff = undefined
+        for (let i = 0; i < this.state.scales.length; i++){
+            if (this.state.scales[i].name === event.target.value){
+                soff = this.state.scales[i].soff;
+            }
+        }
+
+        this.setState({
+            scale: event.target.value,
+            soff: soff
+
+        })
+        console.log('soff:' + this.state.soff)
+    }
+
+    handleHTTPErrors(response) {
+        if (!response.ok) throw Error(response.status + ': ' + response.statusText);
+        return response;
+    }
+
+    componentDidMount() {
+        fetch('http://localhost:3004/scales')
+            .then(response=> this.handleHTTPErrors(response))
+            .then(response=> response.json())
+            .then(result=> {
+                this.setState({
+                    scales: result
+                });
+            })
+            .catch(error=> {
+                console.log('Fetch API Error: ' + error);
+            });
+    }
 
 	render(){
 		return (
-		<div>
-		<form onSubmit={this.handleRootChange}>
-			<label>
+		<div class='interface'>
+		<form onSubmit={this.handleRootChange} class='mainForm'>
+			<label class='rangeObject' >
 				<input type='range'
 					name='rootnoteinput'
 					min='0' max='11'
 					onChange={this.handleRootChange}
 					value={this.state.root}
+					
 					/>
 			&nbsp;Root note: {this.state.root}
 			</label>
 			<br/>
-			<label>
+			<label class='rangeObject'>	
 				<input type='checkbox'
 					name='nmncheckbox'
-					value={this.state.nmn}
+					checked={this.state.nmn}
+					value='UseNMN'
 					onChange={this.handleNMNChange}/>
 			&nbsp;NMN
 			</label>
 			<br/>
+			    <label>
+				<div class="dropdown">
+				    <button class="dropbtn">Scale: {this.state.scale}</button>
+				    <div class="dropdown-content">
+					{this.state.scales.map(scale =>
+					    <label key={scale.id}>
+						<input key={scale.id} type='radio'  name='scale' value={scale.name}
+						       onChange={this.handleScaleChoice}/>
+						&nbsp;&nbsp;{scale.name}
+					    </label>
+					)}
+				    </div>
+				</div>
+				<br/>
+				<br/>
+			    </label>
 		</form>
 		<GenerateScale nmn={this.state.nmn} base={ this.state.root} soff={this.state.soff}/>
 		</div>
